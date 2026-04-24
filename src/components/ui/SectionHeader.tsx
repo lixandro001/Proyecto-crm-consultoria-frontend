@@ -1,0 +1,1 @@
+export default function SectionHeader({ title, subtitle, action }:{ title:string; subtitle?:string; action?:React.ReactNode; }){ return <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between"><div><h2 className="page-title">{title}</h2>{subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}</div>{action}</div>; }

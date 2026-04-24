@@ -1,0 +1,9 @@
+export interface DashboardResumen { totalClientes:number; totalServiciosActivos:number; totalContratos:number; totalCobrado:number; totalDeuda:number; totalReunionesProgramadas:number; }
+export interface Cliente { id:number; nombres:string; apellidos:string; documentoTipo:string; documentoNumero:string; telefono?:string; email?:string; direccion?:string; estadoCliente:string; fechaRegistro:string; }
+export interface Servicio { id:number; codigo:string; nombre:string; descripcion?:string; precioBase:number; activo:boolean; fechaRegistro:string; }
+export interface ClienteServicio { id:number; clienteId:number; servicioId:number; clienteNombre:string; servicioNombre:string; observacion?:string; estadoProceso:string; fechaAsignacion:string; }
+export interface PlantillaContrato { id:number; nombrePlantilla:string; rutaArchivoWord:string; descripcion?:string; activa:boolean; fechaRegistro:string; }
+export interface Contrato { id:number; clienteId:number; servicioId:number; plantillaContratoId?:number|null; clienteNombre:string; servicioNombre:string; precioTotal:number; montoPagado:number; saldoPendiente:number; fechaContrato:string; fechaEntrega?:string|null; estadoContrato:string; rutaWordGenerado?:string|null; rutaPdf?:string|null; fechaRegistro:string; }
+export interface AgendaEvento { id:number; clienteId:number; clienteNombre:string; titulo:string; descripcion?:string; fechaInicio:string; fechaFin:string; tipoEvento:string; recordatorioActivo:boolean; fechaRegistro:string; }
+export interface Pago { id:number; clienteId:number; contratoId?:number|null; clienteNombre:string; monto:number; fechaPago:string; tipoMovimiento:string; estadoPago:string; metodoPago?:string; observacion?:string; fechaRegistro:string; }
+export interface User { id:number; username:string; fullName:string; roleCode:string; isActive:boolean; fechaRegistro:string; }
