@@ -1,33 +1,3 @@
-// import { useEffect, useState } from "react";
-// import { agendaApi, clientesApi } from "../api/endpoints";
-// import type { AgendaEvento, Cliente } from "../types/entities";
-// import SectionHeader from "../components/ui/SectionHeader";
-// import Loader from "../components/ui/Loader";
-// import EmptyState from "../components/ui/EmptyState";
-// import TableWrapper from "../components/ui/TableWrapper";
-// import FormModal from "../components/ui/FormModal";
-// import { formatDateTime } from "../utils/format";
-// import { useAlert } from "../context/AlertContext";
-
-// export default function AgendaPage() {
-//   const [items,setItems]=useState<AgendaEvento[]>([]);
-//   const [clientes,setClientes]=useState<Cliente[]>([]);
-//   const [loading,setLoading]=useState(true);
-//   const [open,setOpen]=useState(false);
-//   const [form,setForm]=useState({ clienteId:0, titulo:"", descripcion:"", fechaInicio:"", fechaFin:"", tipoEvento:"REUNION", recordatorioActivo:false });
-//   const { showAlert } = useAlert();
-
-//   const load = async()=>{ setLoading(true); try{ const [a,b]=await Promise.all([agendaApi.list(), clientesApi.list()]); setItems(a.data); setClientes(b.data);} finally{ setLoading(false);} };
-//   useEffect(()=>{load();},[]);
-
-//   const save = async(e:React.FormEvent)=>{ e.preventDefault(); try{ await agendaApi.create(form); showAlert("Ok","Evento registrado correctamente.","success"); setOpen(false); load(); } catch(err:any){ showAlert("Error", err?.response?.data?.message || "No se pudo guardar el evento.", "error"); } };
-
-//   return <div><SectionHeader title="Agenda" subtitle="Programa reuniones, pagos, cobros y seguimientos." action={<button className="btn-primary" onClick={()=>setOpen(true)}>Nuevo evento</button>} />
-//   {loading ? <Loader /> : items.length===0 ? <EmptyState message="No hay eventos en agenda." /> :
-//   <TableWrapper><table className="min-w-full text-sm"><thead className="bg-slate-50 text-left text-slate-600"><tr><th className="px-4 py-3">Cliente</th><th className="px-4 py-3">Título</th><th className="px-4 py-3">Tipo</th><th className="px-4 py-3">Inicio</th><th className="px-4 py-3">Fin</th><th className="px-4 py-3">Recordatorio</th></tr></thead><tbody>{items.map(i => <tr key={i.id} className="border-t border-slate-200"><td className="px-4 py-3">{i.clienteNombre}</td><td className="px-4 py-3">{i.titulo}<br /><span className="text-xs text-slate-500">{i.descripcion || "-"}</span></td><td className="px-4 py-3">{i.tipoEvento}</td><td className="px-4 py-3">{formatDateTime(i.fechaInicio)}</td><td className="px-4 py-3">{formatDateTime(i.fechaFin)}</td><td className="px-4 py-3">{i.recordatorioActivo ? "Sí":"No"}</td></tr>)}</tbody></table></TableWrapper>}
-//   <FormModal open={open} title="Nuevo evento" onClose={()=>setOpen(false)}><form onSubmit={save} className="grid gap-4 md:grid-cols-2"><select className="input" value={form.clienteId} onChange={e=>setForm({...form,clienteId:Number(e.target.value)})} required><option value={0}>Selecciona cliente</option>{clientes.map(c => <option key={c.id} value={c.id}>{c.nombres} {c.apellidos}</option>)}</select><select className="input" value={form.tipoEvento} onChange={e=>setForm({...form,tipoEvento:e.target.value})}><option>REUNION</option><option>PAGO</option><option>COBRO</option><option>ENTREGA</option><option>SEGUIMIENTO</option></select><input className="input md:col-span-2" placeholder="Título" value={form.titulo} onChange={e=>setForm({...form,titulo:e.target.value})} required /><textarea className="input md:col-span-2" placeholder="Descripción" value={form.descripcion} onChange={e=>setForm({...form,descripcion:e.target.value})} /><input className="input" type="datetime-local" value={form.fechaInicio} onChange={e=>setForm({...form,fechaInicio:e.target.value})} required /><input className="input" type="datetime-local" value={form.fechaFin} onChange={e=>setForm({...form,fechaFin:e.target.value})} required /><label className="flex items-center gap-3 text-sm"><input type="checkbox" checked={form.recordatorioActivo} onChange={e=>setForm({...form,recordatorioActivo:e.target.checked})} /> Activar recordatorio</label><div className="md:col-span-2 flex justify-end"><button className="btn-primary" type="submit">Guardar</button></div></form></FormModal></div>;
-// }
-
 import { useEffect, useMemo, useState } from "react";
 import { Calendar, dateFnsLocalizer, Views } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
@@ -40,9 +10,7 @@ import EmptyState from "../components/ui/EmptyState";
 import FormModal from "../components/ui/FormModal";
 import { useAlert } from "../context/AlertContext";
 
-const locales = {
-  es,
-};
+const locales = { es };
 
 const localizer = dateFnsLocalizer({
   format,
@@ -74,20 +42,21 @@ function toInputDateTime(value: Date) {
 }
 
 export default function AgendaPage() {
-  const [items, setItems] = useState<AgendaEvento[]>([]);
-  const [clientes, setClientes] = useState<Cliente[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-
-  const [form, setForm] = useState({
-    clienteId: 0,
+  const initialForm = {
+    clienteId: "",
     titulo: "",
     descripcion: "",
     fechaInicio: "",
     fechaFin: "",
-    tipoEvento: "REUNION",
+    tipoEvento: "",
     recordatorioActivo: false,
-  });
+  };
+
+  const [items, setItems] = useState<AgendaEvento[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(initialForm);
 
   const { showAlert } = useAlert();
 
@@ -126,24 +95,70 @@ export default function AgendaPage() {
     }));
   }, [items]);
 
+  const handleNewEvent = () => {
+    setForm(initialForm);
+    setOpen(true);
+  };
+
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!form.clienteId) {
+      showAlert("Validación", "Debes seleccionar un cliente.", "error");
+      return;
+    }
+
+    if (!form.tipoEvento) {
+      showAlert("Validación", "Debes seleccionar un tipo de evento.", "error");
+      return;
+    }
+
+    if (!form.titulo || form.titulo.trim() === "") {
+      showAlert("Validación", "Debes ingresar el título del evento.", "error");
+      return;
+    }
+
+    if (!form.fechaInicio) {
+      showAlert(
+        "Validación",
+        "Debes ingresar la fecha y hora de inicio.",
+        "error"
+      );
+      return;
+    }
+
+    if (!form.fechaFin) {
+      showAlert(
+        "Validación",
+        "Debes ingresar la fecha y hora de fin.",
+        "error"
+      );
+      return;
+    }
+
+    const inicio = new Date(form.fechaInicio);
+    const fin = new Date(form.fechaFin);
+
+    if (fin < inicio) {
+      showAlert(
+        "Validación",
+        "La fecha y hora de fin no puede ser menor que la de inicio.",
+        "error"
+      );
+      return;
+    }
+
+    const payload = {
+      ...form,
+      clienteId: Number(form.clienteId),
+    };
+
     try {
-      await agendaApi.create(form);
+      await agendaApi.create(payload);
       showAlert("Ok", "Evento registrado correctamente.", "success");
 
       setOpen(false);
-      setForm({
-        clienteId: 0,
-        titulo: "",
-        descripcion: "",
-        fechaInicio: "",
-        fechaFin: "",
-        tipoEvento: "REUNION",
-        recordatorioActivo: false,
-      });
-
+      setForm(initialForm);
       load();
     } catch (err: any) {
       showAlert(
@@ -155,11 +170,11 @@ export default function AgendaPage() {
   };
 
   const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
-    setForm((prev) => ({
-      ...prev,
+    setForm({
+      ...initialForm,
       fechaInicio: toInputDateTime(start),
       fechaFin: toInputDateTime(end),
-    }));
+    });
 
     setOpen(true);
   };
@@ -181,13 +196,19 @@ Descripción: ${ev.descripcion || "-"}`,
   const eventStyleGetter = (event: CalendarEvent) => {
     const tipo = event.resource.tipoEvento?.toUpperCase();
 
-    let backgroundColor = "#2563eb"; // default azul
+    let backgroundColor = "#2563eb";
 
-    if (tipo === "REUNION") backgroundColor = "#0f766e";
-    if (tipo === "PAGO") backgroundColor = "#16a34a";
-    if (tipo === "COBRO") backgroundColor = "#7c3aed";
-    if (tipo === "ENTREGA") backgroundColor = "#ea580c";
-    if (tipo === "SEGUIMIENTO") backgroundColor = "#0891b2";
+    if (tipo === "REUNION_INICIAL") backgroundColor = "#1d4ed8";
+    else if (tipo === "ASESORIA_TESIS") backgroundColor = "#0f766e";
+    else if (tipo === "REVISION_AVANCE") backgroundColor = "#0891b2";
+    else if (tipo === "SEGUIMIENTO_CLIENTE") backgroundColor = "#7c3aed";
+    else if (tipo === "ALCANCE_TECNICO") backgroundColor = "#ea580c";
+    else if (tipo === "COBRO_PROGRAMADO") backgroundColor = "#16a34a";
+    else if (tipo === "PAGO_PENDIENTE") backgroundColor = "#dc2626";
+    else if (tipo === "ENTREGA_PARCIAL") backgroundColor = "#f59e0b";
+    else if (tipo === "ENTREGA_FINAL") backgroundColor = "#22c55e";
+    else if (tipo === "SOPORTE_TECNICO") backgroundColor = "#334155";
+    else if (tipo === "OTRO") backgroundColor = "#64748b";
 
     return {
       style: {
@@ -207,7 +228,7 @@ Descripción: ${ev.descripcion || "-"}`,
         title="Agenda"
         subtitle="Programa reuniones, pagos, cobros y seguimientos."
         action={
-          <button className="btn-primary" onClick={() => setOpen(true)}>
+          <button className="btn-primary" onClick={handleNewEvent}>
             Nuevo evento
           </button>
         }
@@ -219,35 +240,37 @@ Descripción: ${ev.descripcion || "-"}`,
         <EmptyState message="No hay eventos en agenda." />
       ) : (
         <div className="space-y-4">
-          {/* Leyenda */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex flex-wrap gap-3 text-sm">
               <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-blue-700"></span>
+                Reunión inicial
+              </span>
+              <span className="inline-flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-teal-700"></span>
-                Reunión
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-green-600"></span>
-                Pago
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-violet-700"></span>
-                Cobro
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-orange-600"></span>
-                Entrega
+                Asesoría tesis
               </span>
               <span className="inline-flex items-center gap-2">
                 <span className="h-3 w-3 rounded-full bg-cyan-600"></span>
-                Seguimiento
+                Revisión avance
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-violet-700"></span>
+                Seguimiento cliente
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-orange-600"></span>
+                Alcance técnico
+              </span>
+              <span className="inline-flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-green-600"></span>
+                Cobro programado
               </span>
             </div>
           </div>
 
-          {/* Calendario */}
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200">
-           <div className="h-[300px]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="h-[300px]">
               <Calendar
                 localizer={localizer}
                 events={calendarEvents}
@@ -281,78 +304,126 @@ Descripción: ${ev.descripcion || "-"}`,
         </div>
       )}
 
-      {/* Modal */}
-      <FormModal open={open} title="Nuevo evento" onClose={() => setOpen(false)}>
+      <FormModal
+        open={open}
+        title="Nuevo evento"
+        onClose={() => {
+          setOpen(false);
+          setForm(initialForm);
+        }}
+      >
         <form onSubmit={save} className="grid gap-4 md:grid-cols-2">
-          <select
-            className="input"
-            value={form.clienteId}
-            onChange={(e) =>
-              setForm({ ...form, clienteId: Number(e.target.value) })
-            }
-            required
-          >
-            <option value={0}>Selecciona cliente</option>
-            {clientes.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.nombres} {c.apellidos}
-              </option>
-            ))}
-          </select>
-
-          <select
-            className="input"
-            value={form.tipoEvento}
-            onChange={(e) => setForm({ ...form, tipoEvento: e.target.value })}
-          >
-            <option value="REUNION">REUNION</option>
-            <option value="PAGO">PAGO</option>
-            <option value="COBRO">COBRO</option>
-            <option value="ENTREGA">ENTREGA</option>
-            <option value="SEGUIMIENTO">SEGUIMIENTO</option>
-          </select>
-
-          <input
-            className="input md:col-span-2"
-            placeholder="Título"
-            value={form.titulo}
-            onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-            required
-          />
-
-          <textarea
-            className="input md:col-span-2"
-            placeholder="Descripción"
-            value={form.descripcion}
-            onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
-          />
-
-          <input
-            className="input"
-            type="datetime-local"
-            value={form.fechaInicio}
-            onChange={(e) => setForm({ ...form, fechaInicio: e.target.value })}
-            required
-          />
-
-          <input
-            className="input"
-            type="datetime-local"
-            value={form.fechaFin}
-            onChange={(e) => setForm({ ...form, fechaFin: e.target.value })}
-            required
-          />
-
-          <label className="flex items-center gap-3 text-sm md:col-span-2">
-            <input
-              type="checkbox"
-              checked={form.recordatorioActivo}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Cliente <span className="text-red-500">*</span>
+            </label>
+            <select
+              className="input"
+              value={form.clienteId}
               onChange={(e) =>
-                setForm({ ...form, recordatorioActivo: e.target.checked })
+                setForm({ ...form, clienteId: e.target.value })
               }
+              required
+            >
+              <option value="">Selecciona cliente</option>
+              {clientes.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nombres} {c.apellidos}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Tipo de evento <span className="text-red-500">*</span>
+            </label>
+            <select
+              className="input"
+              value={form.tipoEvento}
+              onChange={(e) => setForm({ ...form, tipoEvento: e.target.value })}
+              required
+            >
+              <option value="">Selecciona tipo de evento</option>
+              <option value="REUNION_INICIAL">Reunión inicial</option>
+              <option value="ASESORIA_TESIS">Asesoría de tesis</option>
+              <option value="REVISION_AVANCE">Revisión de avance</option>
+              <option value="SEGUIMIENTO_CLIENTE">
+                Seguimiento con cliente
+              </option>
+              <option value="ALCANCE_TECNICO">Alcance técnico</option>
+              <option value="COBRO_PROGRAMADO">Cobro programado</option>
+              <option value="PAGO_PENDIENTE">Pago pendiente</option>
+              <option value="ENTREGA_PARCIAL">Entrega parcial</option>
+              <option value="ENTREGA_FINAL">Entrega final</option>
+              <option value="SOPORTE_TECNICO">Soporte técnico</option>
+              <option value="OTRO">Otro</option>
+            </select>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Título del evento <span className="text-red-500">*</span>
+            </label>
+            <input
+              className="input"
+              placeholder="Ejemplo: Reunión de avance con cliente"
+              value={form.titulo}
+              onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+              required
             />
-            Activar recordatorio
-          </label>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Descripción
+            </label>
+            <textarea
+              className="input min-h-[110px]"
+              placeholder="Detalle breve del evento"
+              value={form.descripcion}
+              onChange={(e) => setForm({ ...form, descripcion: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Fecha y hora de inicio <span className="text-red-500">*</span>
+            </label>
+            <input
+              className="input"
+              type="datetime-local"
+              value={form.fechaInicio}
+              onChange={(e) => setForm({ ...form, fechaInicio: e.target.value })}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-700">
+              Fecha y hora de fin <span className="text-red-500">*</span>
+            </label>
+            <input
+              className="input"
+              type="datetime-local"
+              value={form.fechaFin}
+              onChange={(e) => setForm({ ...form, fechaFin: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="flex items-center gap-3 text-sm font-medium text-slate-700">
+              <input
+                type="checkbox"
+                checked={form.recordatorioActivo}
+                onChange={(e) =>
+                  setForm({ ...form, recordatorioActivo: e.target.checked })
+                }
+              />
+              Activar recordatorio
+            </label>
+          </div>
 
           <div className="md:col-span-2 flex justify-end">
             <button className="btn-primary" type="submit">
