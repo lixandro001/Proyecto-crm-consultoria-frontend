@@ -1,5 +1,5 @@
 export interface DashboardResumen { totalClientes:number; totalServiciosActivos:number; totalContratos:number; totalCobrado:number; totalDeuda:number; totalReunionesProgramadas:number; }
-export interface Cliente { id:number; nombres:string; apellidos:string; documentoTipo:string; documentoNumero:string; telefono?:string; email?:string; direccion?:string; estadoCliente:string; fechaRegistro:string; }
+export interface Cliente { id:number; nombres:string; apellidos:string; documentoTipo:string; documentoNumero:string; telefono?:string; email?:string; direccion?:string; estadoCliente:string; fechaRegistro:string; carrera:string; universidad:string ; ciclo:number}
 export interface Servicio { id:number; codigo:string; nombre:string; descripcion?:string; precioBase:number; activo:boolean; fechaRegistro:string; }
 export interface ClienteServicio { id:number; clienteId:number; servicioId:number; clienteNombre:string; servicioNombre:string; observacion?:string; estadoProceso:string; fechaAsignacion:string; }
 export interface PlantillaContrato { id:number; nombrePlantilla:string; rutaArchivoWord:string; descripcion?:string; activa:boolean; fechaRegistro:string; }

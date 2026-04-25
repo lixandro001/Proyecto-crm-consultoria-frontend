@@ -5,7 +5,14 @@ import type { DashboardResumen, Cliente, Servicio, ClienteServicio, PlantillaCon
 
 export const authApi = { login: async (payload:{username:string;password:string}) => (await api.post<LoginResponseApi>("/auth/login", payload)).data };
 export const dashboardApi = { resumen: async () => (await api.get<ApiResponse<DashboardResumen>>("/dashboard/resumen")).data };
-export const clientesApi = { list: async () => (await api.get<ApiResponse<Cliente[]>>("/clientes")).data, create: async (p:any) => (await api.post("/clientes", p)).data, update: async (id:number,p:any)=> (await api.put(`/clientes/${id}`, p)).data };
+
+export const clientesApi = { list: async () => 
+     (await api.get<ApiResponse<Cliente[]>>("/clientes")).data, 
+      create: async (p:any) => (await api.post("/clientes", p)).data,
+      update: async (id:number,p:any)=>
+         (await api.put(`/clientes/${id}`, p)).data };
+
+
 export const serviciosApi = { list: async () => (await api.get<ApiResponse<Servicio[]>>("/servicios")).data, create: async (p:any)=> (await api.post("/servicios", p)).data };
 export const clienteServiciosApi = { list: async () => (await api.get<ApiResponse<ClienteServicio[]>>("/cliente-servicios")).data, create: async (p:any)=> (await api.post("/cliente-servicios", p)).data };
 export const plantillasApi = { list: async () => (await api.get<ApiResponse<PlantillaContrato[]>>("/plantillas-contrato")).data, upload: async (fd:FormData) => (await api.post("/plantillas-contrato/upload", fd, {headers:{"Content-Type":"multipart/form-data"}})).data };
